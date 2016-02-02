@@ -3,11 +3,8 @@ package com.example.android.instaweather;
 /**
  * Created by ADITYA on 1/19/2016.
  */
-
-import java.io.IOException;
-
-import android.os.AsyncTask;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
@@ -36,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
 /**
  * Encapsulates fetching the forecast and displaying it as a {@link ListView} layout.
  */
@@ -48,30 +44,30 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
-        public void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                // Add this line in order for this fragment to handle menu events.
-                        setHasOptionsMenu(true);
-            }
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Add this line in order for this fragment to handle menu events.
+        setHasOptionsMenu(true);
+    }
 
-                @Override
-        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-                inflater.inflate(R.menu.forecastfragment, menu);
-            }
-                @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-                // Handle action bar item clicks here. The action bar will
-                        // automatically handle clicks on the Home/Up button, so long
-                                // as you specify a parent activity in AndroidManifest.xml.
-                                        int id = item.getItemId();
-                if (id == R.id.action_refresh) {
-                    FetchWeatherTask weatherTask = new FetchWeatherTask();
-                                weatherTask.execute("94043");
-                        return true;
-                    }
-                return super.onOptionsItemSelected(item);
-            }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.forecastfragment, menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_refresh) {
+            FetchWeatherTask weatherTask = new FetchWeatherTask();
+            weatherTask.execute("248007");
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -79,7 +75,7 @@ public class ForecastFragment extends Fragment {
 
         // Create some dummy data for the ListView.  Here's a sample weekly forecast
         String[] data = {
-                "Mon 6/23‚- Sunny - 31/17",
+                "Mon 6/23â€‚- Sunny - 31/17",
                 "Tue 6/24 - Foggy - 21/8",
                 "Wed 6/25 - Cloudy - 22/17",
                 "Thurs 6/26 - Rainy - 18/11",
@@ -113,8 +109,8 @@ public class ForecastFragment extends Fragment {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
         /* The date/time conversion code is going to be moved outside the asynctask later,
-        * so for convenience we're breaking it out into its own method now.
-        */
+         * so for convenience we're breaking it out into its own method now.
+         */
         private String getReadableDateString(long time){
             // Because the API returns a unix timestamp (measured in seconds),
             // it must be converted to milliseconds in order to be converted to valid date.
@@ -227,9 +223,9 @@ public class ForecastFragment extends Fragment {
             String forecastJsonStr = null;
 
             String format = "json";
+            String APPID= "37cdc6878b2e9b3c28237b49c3e5e7c4";
             String units = "metric";
             int numDays = 7;
-
 
             try {
                 // Construct the URL for the OpenWeatherMap query
@@ -248,6 +244,7 @@ public class ForecastFragment extends Fragment {
                         .appendQueryParameter(FORMAT_PARAM, format)
                         .appendQueryParameter(UNITS_PARAM, units)
                         .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                        .appendQueryParameter(APPID_PARAM, APPID)
                         .build();
 
                 URL url = new URL(builtUri.toString());
@@ -281,6 +278,8 @@ public class ForecastFragment extends Fragment {
                     return null;
                 }
                 forecastJsonStr = buffer.toString();
+
+                Log.v(LOG_TAG, "Forecast string: " + forecastJsonStr);
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 // If the code didn't successfully get the weather data, there's no point in attemping
@@ -298,15 +297,27 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
-            try {
-                                return getWeatherDataFromJson(forecastJsonStr, numDays);
-                            } catch (JSONException e) {
-                                Log.e(LOG_TAG, e.getMessage(), e);
-                                e.printStackTrace();
-                            }
 
-                                // This will only happen if there was an error getting or parsing the forecast.
+            try {
+                return getWeatherDataFromJson(forecastJsonStr, numDays);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+
+            // This will only happen if there was an error getting or parsing the forecast.
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String[] result) {
+            if (result != null) {
+                mForecastAdapter.clear();
+                for(String dayForecastStr : result) {
+                    mForecastAdapter.add(dayForecastStr);
+                }
+                // New data is back from the server.  Hooray!
+            }
         }
     }
 }
